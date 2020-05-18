@@ -4,6 +4,7 @@
   "description": "A node withings API with oauth2 support ",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,5 +22,11 @@
   "bugs": {
     "url": "https://github.com/AndreasWidmer/node-withings-api/issues"
   },
-  "homepage": "https://github.com/AndreasWidmer/node-withings-api#readme"
+  "homepage": "https://github.com/AndreasWidmer/node-withings-api#readme",
+  "devDependencies": {
+    "typescript": "^3.9.2"
+  },
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
 }
