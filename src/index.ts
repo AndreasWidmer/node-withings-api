@@ -1,5 +1,4 @@
 const oauth = require('simple-oauth2');
-const createApplication = require('./example');
 import axios from 'axios';
 
 
@@ -33,54 +32,56 @@ export class WithingsApi {
         return this.withingsApi.authorizationCode.authorizeURL(this.config);
     }
 
-}
+    public handleCallback = async (code) => {
+
+        // check if token in localstorage
+        // if, check if refresh is needed
 
 
+        // else, get a new token
 
-
-createApplication(({app, callbackUrl}) => {
-
-
-
-
-    app.get('/oauth_callback', async (req, res) => {
-        const {code} = req.query;
         const options = {
             code,
-            redirect_uri: callbackUrl,
+            redirect_uri: this.config.redirect_uri,
         };
         console.log('Got the code: ', code);
 
         try {
-            const result = await oauth2.authorizationCode.getToken(options);
+            const result = await this.withingsApi.authorizationCode.getToken(options);
 
             console.log('The resulting token: ', result);
 
-            let token = oauth2.accessToken.create(result);
-            if (token.expired()) {
-                try {
-                    const params = {
-                        scope: 'user.info,user.metrics',
-                    };
+            let token = this.withingsApi.accessToken.create(result);
 
-                    token = await token.refresh(params);
-                } catch (error) {
-                    console.log('Error refreshing access token: ', error.message);
-                }
-            }
-            const bearer = {
-                headers: {Authorization: `Bearer ${result.access_token}`},
-            };
+            axios.defaults.headers.common = {'Authorization': `Bearer ${token}`}
 
-            const user = await axios.get('https://wbsapi.withings.net/v2/user?action=getdevice', bearer);
-            const meas = await axios.get('https://wbsapi.withings.net/measure?action=getmeas', bearer);
+            const meas = await axios.get('https://wbsapi.withings.net/measure?action=getmeas');
 
-            return res.status(200).json({user: user.data.body.devices, meas: meas.data.body});
+            return meas.data.body;
         } catch (error) {
             console.error('Access Token Error');
             console.error(error);
-            return res.status(500).json('Authentication failed');
+            return Promise.reject(error);
         }
-    });
+    }
 
-});
+    public getDevices = async () => {
+        const user = await axios.get('https://wbsapi.withings.net/v2/user?action=getdevice');
+
+    }
+
+    private checkTokenExpiry = async (token) => {
+        if (token.expired()) {
+            try {
+                const params = {
+                    scope: 'user.info,user.metrics',
+                };
+
+                return await token.refresh(params);
+            } catch (error) {
+                console.log('Error refreshing access token: ', error.message);
+            }
+        }
+    }
+
+}

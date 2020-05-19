@@ -1,3 +1,5 @@
+import { WithingsApi } from '../index';
+
 const app = require('express')();
 
 const port = 3999;
@@ -17,9 +19,15 @@ module.exports = (cb) => {
     });
 
 
+    const withingsApi = new WithingsApi();
 
     app.get('/auth', (req, res) => {
-        res.redirect(authorizationUri);
+        res.redirect(withingsApi.getAuthorizationUri());
+    });
+
+
+    app.get('/oauth_callback', async (req, res) => {
+        await withingsApi.handleCallback(req.body.code);
     });
 
 
